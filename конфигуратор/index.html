@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Конфигуратор вездеходов</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f6f5ec;
+      color: #2b2a28;
+    }
+
+    .configurator {
+      max-width: 1100px;
+      margin: 40px auto;
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar {
+      width: 200px;
+      background: #2b2a28;
+      color: #f6f5ec;
+      padding: 20px;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    .sidebar h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #ed7f1c;
+    }
+
+    .sidebar button {
+      display: block;
+      width: 100%;
+      margin: 8px 0;
+      padding: 12px 0;
+      background: #3a3937;
+      border: none;
+      color: #f6f5ec;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .sidebar button:hover,
+    .sidebar button.active {
+      background: #ed7f1c;
+      color: #2b2a28;
+      font-weight: bold;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .card {
+      background: #f6f5ec;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.08);
+
+    }
+
+    .preview {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+
+    }
+
+    .preview img {
+      display: block;
+      margin: 0 auto 15px auto;
+      max-width: 100%;
+    }
+
+    .preview h2 {
+      margin-top: 0;
+      color: #2b2a28;
+      border-bottom: 2px solid #ed7f1c;
+      padding-bottom: 5px;
+    }
+
+    .options {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .options-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+      max-height: 600px;
+      scrollbar-width: thin;
+      scrollbar-color: #ed7f1c #f6f5ec;
+    }
+
+    .options::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .options::-webkit-scrollbar-track {
+      background: #f6f5ec;
+      border-radius: 8px;
+    }
+
+    .options::-webkit-scrollbar-thumb {
+      background-color: #ed7f1c;
+      border-radius: 8px;
+      border: 2px solid #f6f5ec;
+    }
+
+    .options::-webkit-scrollbar-thumb:hover {
+      background-color: #d66f0c;
+    }
+
+    .options h2 {
+      margin-top: 0;
+      color: #2b2a28;
+      border-bottom: 2px solid #ed7f1c;
+      padding-bottom: 5px;
+    }
+
+    details {
+      margin: 12px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    details:hover {
+      border-color: #ed7f1c;
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 10px;
+      font-weight: bold;
+      background: #f0f0f0;
+      color: #2b2a28;
+    }
+
+
+    .option {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-top: 1px solid #eee;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .option:first-of-type {
+      border-top: none;
+    }
+
+    .option:hover {
+      background: #f9f3e8;
+    }
+
+    .option.active {
+      background: #e9e6dd;
+      border-left: 4px solid #ed7f1c;
+    }
+
+    .option input[type="checkbox"] {
+      display: none;
+    }
+
+    .custom-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #2b2a28;
+      border-radius: 4px;
+      margin-right: 12px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .option input[type="checkbox"]:checked+.custom-checkbox {
+      background: #ed7f1c;
+      border-color: #ed7f1c;
+    }
+
+    .option input[type="checkbox"]:checked+.custom-checkbox::after {
+      content: "✓";
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .option .info {
+      flex: 1;
+    }
+
+    .option .info .name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #2b2a28;
+    }
+
+    .option .info .price {
+      font-size: 14px;
+      font-weight: bold;
+      color: #ed7f1c;
+    }
+
+    .options-footer {
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 1px solid #ddd;
+    }
+
+    .options-footer .base {
+      font-size: 16px;
+      color: #2b2a28;
+      margin-bottom: 6px;
+    }
+
+    .options-footer .addons {
+      font-size: 16px;
+      color: #2b2a28;
+      margin-bottom: 10px;
+    }
+
+    .options-footer .divider {
+      border-top: 2px dashed #ccc;
+      margin: 10px 0;
+    }
+
+    .options-footer .total {
+      font-size: 20px;
+      color: #ed7f1c;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .configurator {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+
+      .sidebar {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #2b2a28;
+        border-radius: 12px;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      .sidebar h2 {
+        display: block;
+        font-size: 16px;
+        color: #ed7f1c;
+        margin-bottom: 6px;
+        text-align: center;
+      }
+
+      .sidebar .buttons-container {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        scrollbar-width: thin;
+        scrollbar-color: #ed7f1c #2b2a28;
+      }
+
+      .sidebar .buttons-container::-webkit-scrollbar {
+        height: 6px;
+      }
+
+      .sidebar .buttons-container::-webkit-scrollbar-track {
+        background: #2b2a28;
+        border-radius: 8px;
+      }
+
+      .sidebar .buttons-container::-webkit-scrollbar-thumb {
+        background-color: #ed7f1c;
+        border-radius: 8px;
+        border: 2px solid #2b2a28;
+      }
+
+      .sidebar .buttons-container::-webkit-scrollbar-thumb:hover {
+        background-color: #d66f0c;
+      }
+
+      .sidebar button {
+        font-size: 14px;
+        padding: 8px 12px;
+        background: #3a3937;
+        border-radius: 8px;
+        white-space: nowrap;
+        color: #f6f5ec;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .sidebar button.active {
+        background: #ed7f1c;
+        color: #2b2a28;
+      }
+
+      .main {
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+      }
+
+      .card {
+        width: 100%;
+        box-sizing: border-box;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .preview h2,
+      .options h2 {
+        font-size: 18px;
+        text-align: center;
+      }
+
+      .preview img {
+        width: 100%;
+        height: auto;
+        border-radius: 12px;
+        margin: 10px 0;
+      }
+
+
+      .options-list {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 10px;
+        scrollbar-width: thin;
+        scrollbar-color: #ed7f1c #f6f5ec;
+      }
+
+      .options-list::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .options-list::-webkit-scrollbar-track {
+        background: #f6f5ec;
+        border-radius: 8px;
+      }
+
+      .options-list::-webkit-scrollbar-thumb {
+        background-color: #ed7f1c;
+        border-radius: 8px;
+        border: 2px solid #f6f5ec;
+      }
+
+      .options-list::-webkit-scrollbar-thumb:hover {
+        background-color: #d66f0c;
+      }
+
+      details {
+        margin: 8px 0;
+      }
+
+      summary {
+        font-size: 16px;
+        padding: 10px;
+      }
+
+      .option {
+        padding: 10px;
+        font-size: 15px;
+      }
+
+      .options-footer {
+        font-size: 16px;
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .options-footer .total {
+        font-size: 20px;
+        color: #ed7f1c;
+        font-weight: bold;
+      }
+    }
+
+    .slider {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 12px;
+      align-self: center;
+      margin-top: 20px;
+    }
+
+    .slider img {
+      width: 100%;
+      display: none;
+      transition: opacity 0.4s ease;
+      border-radius: 12px;
+    }
+
+    .slider img.active {
+      display: block;
+    }
+
+    .slider button.prev,
+    .slider button.next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(43, 42, 40, 0.6);
+      color: #fff;
+      border: none;
+      font-size: 24px;
+      padding: 8px 14px;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .slider button.prev:hover,
+    .slider button.next:hover {
+      background: #ed7f1c;
+    }
+
+    .slider button.prev {
+      left: 10px;
+    }
+
+    .slider button.next {
+      right: 10px;
+    }
+
+    .slider-dots {
+      text-align: center;
+      margin-top: 10px;
+      align-self: center;
+    }
+
+    .slider-dots .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: #bbb;
+      border-radius: 50%;
+      margin: 0 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .slider-dots .dot.active,
+    .slider-dots .dot:hover {
+      background: #ed7f1c;
+    }
+
+    .slider img {
+      cursor: grab;
+    }
+
+    .slider img:active {
+      cursor: grabbing;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="configurator">
+
+    <div class="sidebar">
+      <h2>Модели</h2>
+      <div class="buttons-container">
+        <button id="btn-finist" onclick="selectModel('finist')">ФИНИСТ</button>
+        <button id="btn-profi" onclick="selectModel('profi')">ФИНИСТ ПРО</button>
+        <button id="btn-pikap" onclick="selectModel('pikap')">ФИНИСТ Пикап</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="card preview" id="preview">
+        <h2>Выберите модель</h2>
+      </div>
+
+      <div class="card options" id="options">
+        <h2>Опции</h2>
+        <div class="options-list">
+          <p>Сначала выберите модель</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const models = {
+      finist: {
+        name: "ФИНИСТ",
+        basePrice: 2300000,
+        images: ["img/finist/convertio.in_IMG_1298.webp", "img/finist/convertio.in_IMG_1299.webp", "img/finist/convertio.in_IMG_1300.webp", "img/finist/convertio.in_IMG_1301.webp", "img/finist/convertio.in_IMG_1302.webp"],
+        desc: `
+      <h2>Технические характеристики</h2>
+      <b> Мощность:</b> 109 л.с.,<br> 
+      <b>Категория прав:</b> А2.<br><br>
+       <h2>Базовая комплектация</h2>  
+       Стекло очиститель, стекло омыватель, двигатель Тойота 1NZ-FE. 
+       АКПП Тойота,отопитель салона Газель, передние раздвижные форточки, 
+       раздвижная форточка задней двери, автолин на полу, 
+       передние сиденья ВАЗ, шины «МАРШЛЭНД 1300*600, 
+       обшивка композитным материалом, 
+       гидрообьемное рулевое управление, дисковые тормоза,
+       светотехника, рессорная подвеска`,
+        options: {
+          "Электрооборудование": [
+            { name: "Дизельный автономный отопитель", price: 35000 },
+            { name: "Электро лебедка 6000 dbl 4000 кг", price: 54000 },
+            { name: "Быстросъемный механизм для крепления лебедки спереди и сзади", price: 15000 },
+            { name: "Задний диодный свет", price: 8000 },
+            { name: "Светодиодная балка 240 W", price: 17000 },
+            { name: "Внутрисалонное LED освещение", price: 10000 },
+            { name: "Боковой диодный свет", price: 10000 },
+            { name: "Камера заднего вида+монитор+ аудиоподготовка", price: 45000 }
+          ],
+          "Кузов": [
+            { name: "Фаркоп (квадрат/шар )", price: 8000 },
+            { name: "Расширители колесных арок ПНД", price: 15000 },
+            { name: "Задние лавки со спинкой (2 шт.)", price: 20000 },
+            { name: "Заднее спальное место(включая задние лавки)", price: 30000 },
+            { name: "Отсекатель веток", price: 7000 },
+            { name: "Дополнительная топливная канистра 15 л.", price: 10000 },
+            { name: "Обработка днища антикором", price: 23000 },
+            { name: "Подкачка шин выхлопными газами", price: 5000 },
+            { name: "Усиленный задний бампер", price: 10000 },
+            { name: "Откидные лобовые стекла Триплекс, 2 шт.", price: 53000 },
+            { name: "Обшивка салона с утеплением", price: 197000 },
+            { name: "Раздвижные форточки боковые в задней части кунга (2шт)", price: 30000 },
+            { name: "Люк в крыше (1шт)", price: 27000 },
+            { name: "Багажник экспедиционный", price: 30000 },
+            { name: "Лестница экспедиционная", price: 10000 }
+          ],
+          "Трансмиссия": [
+            { name: "Полуоси усиленные (4 шт.)", price: 55000 },
+            { name: "Принудительная блокировка электрическая передней оси(1шт)", price: 50000 },
+            { name: "Принудительная блокировка электрическая задней оси(1шт)", price: 50000 }
+          ],
+          "Оформление": [
+            { name: "Электронный ПСМ", price: 100000 }
+          ]
+        }
+      },
+      profi: {
+        name: "ФИНИСТ ПРО",
+        basePrice: 2695000,
+        images: ["img/pro/convertio.in_IMG_1308.webp", "img/pro/convertio.in_IMG_1309.webp", "img/pro/convertio.in_IMG_1310.webp", "img/pro/convertio.in_IMG_1311.webp"],
+        desc: `
+      <h2>Технические характеристики</h2>
+      <b> Мощность:</b> 109 л.с.,<br> 
+      <b>Категория прав:</b> А2.<br><br>
+       <h2>Базовая комплектация</h2>  
+       Стекло очиститель, стекло омыватель, двигатель Тойота 1NZ-FE. АКПП Тойота,отопитель салона Газель,передние раздвижные форточки, раздвижная форточка задней двери, автолин на полу,передние сиденья ВАЗ, шины «МАРШЛЭНД 1300*600, обшивка композитным материалом, гидрообьемное рулевое управление, дисковые тормоза, светотехника, рессорная подвеска, раздатка ГАЗ 66, передняя пружинная подвеска`,
+        options: {
+          "Электрооборудование": [
+            { name: "Дизельный автономный отопитель", price: 35000 },
+            { name: "Электро лебедка 6000 dbl 4000 кг", price: 54000 },
+            { name: "Быстросъемный механизм для крепления лебедки спереди и сзади", price: 15000 },
+            { name: "Задний диодный свет", price: 8000 },
+            { name: "Светодиодная балка 240 W", price: 17000 },
+            { name: "Внутрисалонное LED освещение", price: 10000 },
+            { name: "Боковой диодный свет", price: 10000 },
+            { name: "Камера заднего вида+монитор+ аудиоподготовка", price: 45000 }
+          ],
+          "Кузов": [
+            { name: "Фаркоп (квадрат/шар )", price: 8000 },
+            { name: "Расширители колесных арок ПНД", price: 15000 },
+            { name: "Задние лавки со спинкой (2 шт.)", price: 20000 },
+            { name: "Заднее спальное место(включая задние лавки)", price: 30000 },
+            { name: "Отсекатель веток", price: 7000 },
+            { name: "Дополнительная топливная канистра 15 л.", price: 10000 },
+            { name: "Обработка днища антикором", price: 23000 },
+            { name: "Подкачка шин выхлопными газами", price: 5000 },
+            { name: "Откидные лобовые стекла Триплекс, 2 шт.", price: 53000 },
+            { name: "Обшивка салона с утеплением", price: 197000 },
+            { name: "Раздвижные форточки боковые в задней части кунга (2шт)", price: 30000 },
+            { name: "Люк в крыше (1шт)", price: 27000 },
+            { name: "Багажник экспедиционный", price: 30000 },
+            { name: "Лестница экспедиционная", price: 10000 }
+          ],
+          "Трансмиссия": [
+            { name: "Полуоси усиленные (4 шт.)", price: 55000 },
+            { name: "Принудительная блокировка электрическая передней оси(1шт)", price: 50000 },
+            { name: "Принудительная блокировка электрическая задней оси(1шт)", price: 50000 }
+          ],
+          "Оформление": [
+            { name: "Электронный ПСМ", price: 100000 }
+          ]
+        }
+      },
+      pikap: {
+        name: "ФИНИСТ Пикап",
+        basePrice: 2200000,
+        images: ["img/pikap/convertio.in_IMG_1303.webp", "img/pikap/convertio.in_IMG_1304.webp", "img/pikap/convertio.in_IMG_1305.webp", "img/pikap/convertio.in_IMG_1306.webp", "img/pikap/convertio.in_IMG_1307.webp"],
+        desc: `
+      <h2>Технические характеристики</h2>
+      <b> Мощность:</b> 109 л.с.,<br> 
+      <b>Категория прав:</b> А2.<br><br>
+       <h2>Базовая комплектация</h2>  
+       Стекло очиститель, стекло омыватель, двигатель Тойота 1NZ-FE. АКПП Тойота,отопитель салона Газель,передние раздвижные форточки, раздвижная форточка задней двери, автолин на полу,передние сиденья ВАЗ, шины «МАРШЛЭНД 1300*600, обшивка композитным материалом, гидрообьемное рулевое управление, дисковые тормоза, светотехника, рессорная подвеска`,
+        options: {
+          "Электрооборудование": [
+            { name: "Дизельный автономный отопитель", price: 35000 },
+            { name: "Электро лебедка 6000 dbl 4000 кг", price: 54000 },
+            { name: "Быстросъемный механизм для крепления лебедки спереди и сзади", price: 15000 },
+            { name: "Задний диодный свет", price: 8000 },
+            { name: "Светодиодная балка 240 W", price: 17000 },
+            { name: "Внутрисалонное LED освещение", price: 10000 },
+            { name: "Боковой диодный свет", price: 10000 },
+            { name: "Камера заднего вида+монитор+ аудиоподготовка", price: 45000 }
+          ],
+          "Кузов": [
+            { name: "Фаркоп (квадрат/шар )", price: 8000 },
+            { name: "Расширители колесных арок ПНД", price: 15000 },
+            { name: "Задние лавки со спинкой (2 шт.)", price: 20000 },
+            { name: "Заднее спальное место(включая задние лавки)", price: 30000 },
+            { name: "Отсекатель веток", price: 7000 },
+            { name: "Дополнительная топливная канистра 15 л.", price: 10000 },
+            { name: "Обработка днища антикором", price: 23000 },
+            { name: "Подкачка шин выхлопными газами", price: 5000 },
+            { name: "Усиленный задний бампер", price: 10000 },
+            { name: "Откидные лобовые стекла Триплекс, 2 шт.", price: 53000 },
+            { name: "Обшивка салона с утеплением", price: 197000 },
+            { name: "Раздвижные форточки боковые в задней части кунга (2шт)", price: 30000 },
+            { name: "Люк в крыше (1шт)", price: 27000 },
+            { name: "Багажник экспедиционный", price: 30000 },
+            { name: "Лестница экспедиционная", price: 10000 }
+          ],
+          "Трансмиссия": [
+            { name: "Полуоси усиленные (4 шт.)", price: 55000 },
+            { name: "Принудительная блокировка электрическая передней оси(1шт)", price: 50000 },
+            { name: "Принудительная блокировка электрическая задней оси(1шт)", price: 50000 }
+          ],
+          "Оформление": [
+            { name: "Электронный ПСМ", price: 100000 }
+          ]
+        }
+      }
+    };
+
+    let currentModel = null;
+
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    function selectModel(key) {
+      document.querySelectorAll(".sidebar button").forEach(b => b.classList.remove("active"));
+      document.getElementById("btn-" + key).classList.add("active");
+
+      currentModel = models[key];
+      renderPreview();
+      renderOptions();
+    }
+
+    function renderPreview() {
+      const preview = document.getElementById("preview");
+      const imgs = currentModel.images.map(
+        (src, i) => `<img src="${src}" class="slide ${i === 0 ? "active" : ""}" alt="${currentModel.name}">`
+      ).join("");
+
+      preview.innerHTML = `
+    <h2>${currentModel.name}</h2>
+    <div class="slider">
+      ${imgs}
+      <button class="prev" onclick="changeSlide(-1)">&#10094;</button>
+      <button class="next" onclick="changeSlide(1)">&#10095;</button>
+    </div>
+    <div class="slider-dots">
+      ${currentModel.images.map((_, i) => `<span class="dot ${i === 0 ? "active" : ""}" onclick="goToSlide(${i})"></span>`).join("")}
+    </div>
+    <div class="desc">${currentModel.desc}</div>
+  `;
+      currentSlide = 0;
+    }
+
+    function renderOptions() {
+      const optionsDiv = document.getElementById("options");
+
+      let list = optionsDiv.querySelector('.options-list');
+      if (!list) {
+        list = document.createElement('div');
+        list.className = 'options-list';
+        optionsDiv.appendChild(list);
+      }
+
+      list.innerHTML = '';
+
+      for (let category in currentModel.options) {
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
+        summary.textContent = category;
+        details.appendChild(summary);
+
+        currentModel.options[category].forEach(opt => {
+          const label = document.createElement('label');
+          label.className = 'option';
+          label.innerHTML = `
+          <input type="checkbox" value="${opt.price}" onchange="updateTotal()">
+          <span class="custom-checkbox"></span>
+          <div class="info">
+            <div class="name">${opt.name}</div>
+            <div class="price">${formatNumber(opt.price)} руб.</div>
+          </div>
+        `;
+          details.appendChild(label);
+        });
+
+        list.appendChild(details);
+      }
+
+      let footer = optionsDiv.querySelector('.options-footer');
+      if (!footer) {
+        footer = document.createElement('div');
+        footer.className = 'options-footer';
+        optionsDiv.appendChild(footer);
+      }
+
+
+      footer.innerHTML = `
+  <div class="base">Базовая цена: <span id="basePrice">${formatNumber(currentModel.basePrice)}</span> руб.</div>
+  <div class="addons">Дополнения: <span id="addonsPrice">0</span> руб.</div>
+  <div class="divider"></div>
+  <div class="total">Итого: <span id="totalPrice">${formatNumber(currentModel.basePrice)}</span> руб.</div>
+`;
+
+      updateTotal();
+    }
+
+    function updateTotal() {
+      if (!currentModel) return;
+
+      const checkboxes = document.querySelectorAll('.option input[type="checkbox"]');
+      let addons = 0;
+      checkboxes.forEach(ch => {
+        if (ch.checked) addons += +ch.value;
+      });
+
+      const base = currentModel.basePrice;
+      const total = base + addons;
+
+      document.getElementById('addonsPrice').textContent = formatNumber(addons);
+      document.getElementById('totalPrice').textContent = formatNumber(total);
+    }
+    let currentSlide = 0;
+
+    function changeSlide(n) {
+      showSlide(currentSlide + n);
+    }
+
+    function goToSlide(n) {
+      showSlide(n);
+    }
+
+    function showSlide(n) {
+      const slides = document.querySelectorAll(".slide");
+      const dots = document.querySelectorAll(".dot");
+
+      if (slides.length === 0) return;
+
+      currentSlide = (n + slides.length) % slides.length; // зацикливание
+
+      slides.forEach((s, i) => s.classList.toggle("active", i === currentSlide));
+      dots.forEach((d, i) => d.classList.toggle("active", i === currentSlide));
+    }
+    selectModel('finist');
+
+    let startX = 0;
+    let isDown = false;
+
+    const slider = document.querySelector('.slider');
+
+    slider.addEventListener("mousedown", (e) => {
+      isDown = true;
+      startX = e.clientX;
+      e.preventDefault(); // блокируем выделение
+    });
+
+    slider.addEventListener("mousemove", (e) => {
+      if (!isDown) return;
+      e.preventDefault(); // блокируем выделение при движении мыши
+    });
+
+    slider.addEventListener("mouseup", (e) => {
+      if (!isDown) return;
+      isDown = false;
+
+      const diff = e.clientX - startX;
+      if (Math.abs(diff) > 50) {
+        changeSlide(diff > 0 ? -1 : 1);
+      }
+    });
+
+    slider.addEventListener("mouseleave", () => {
+      isDown = false; // сброс, если мышь ушла за пределы слайдера
+    });
+
+    document.addEventListener("touchstart", (e) => {
+      const slider = e.target.closest(".slider");
+      if (!slider) return;
+      startX = e.touches[0].clientX;
+    });
+
+    document.addEventListener("touchend", (e) => {
+      if (!startX) return;
+      const diff = e.changedTouches[0].clientX - startX;
+      if (Math.abs(diff) > 50) {
+        changeSlide(diff > 0 ? -1 : 1);
+      }
+      startX = 0;
+    });
+  </script>
+
+
+</body>
+
+</html>
